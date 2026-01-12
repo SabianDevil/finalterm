@@ -36,13 +36,13 @@ ________________________________________________________________________________
 3. Hasil Eksperimen
 A. Performa Pelatihan
 Proses pelatihan berlangsung selama 3 epoch dengan total 657 langkah (steps). Berikut adalah rekapitulasi hasil evaluasi pada setiap epoch:
-__________________________________________________________________________
-Epoch	| Training Loss	| Validation Loss |    Accuracy	    |    F1-Score  |
-__________________________________________________________________________
+________________________________________________________________________________
+Epoch	| Training Loss	| Validation Loss |    Accuracy	    |    F1-Score        |
+________________________________________________________________________________
 1       |  	0.2817      |     0.3042    	|     90.00%  	    |     0.899    |
 2	    |   0.2264  	|     0.2745	    |     91.86%    	|     0.918    |
-3	    |   0.1237     |     0.2837    	|     91.14%    	|     0.911    |
-__________________________________________________________________________
+3	    |   0.1237       |     0.2837    	|     91.14%    	|     0.911    |
+________________________________________________________________________________
 
 Model mencapai performa puncak pada Epoch ke-2 dengan akurasi validasi sebesar 91.86%. Pada epoch ke-3, meskipun Training Loss turun drastis (0.12), Validation Loss sedikit naik, mengindikasikan model mulai mengalami sedikit overfitting, namun masih dalam batas wajar.
 B. Visualisasi Loss
