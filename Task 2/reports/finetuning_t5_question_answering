@@ -1,0 +1,56 @@
+Laporan Task 2: Generative Question Answering dengan T5-Small
+Repository Name: finetuning-t5-question-answering 
+Model Architecture: T5-Small (Text-to-Text Transfer Transformer)
+Dataset: SQuAD (Stanford Question Answering Dataset) - Subsampled 
+Task: Abstractive/Generative Question Answering
+________________________________________
+1. Pendahuluan
+Laporan ini membahas implementasi fine-tuning pada model T5 (Text-to-Text Transfer Transformer) varian small untuk tugas Question Answering. Berbeda dengan model berbasis encoder seperti BERT yang memprediksi posisi awal dan akhir jawaban (ekstraktif), T5 menggunakan pendekatan Sequence-to-Sequence.
+Dalam pendekatan ini, tugas QA diperlakukan sebagai masalah pembuatan teks (text generation). Model menerima input gabungan antara pertanyaan dan konteks, lalu dilatih untuk menghasilkan string teks jawaban secara langsung.
+
+2. Metodologi
+A. Dataset & Sampling
+Dataset yang digunakan adalah SQuAD, dataset standar untuk evaluasi pemahaman bacaan mesin. Mengingat keterbatasan sumber daya komputasi (GPU T4) dan efisiensi waktu, dilakukan strategi Random Sampling:
+•	Data Latih: 4.000 sampel.
+•	Data Validasi: 800 sampel.
+•	Seed: 2025 (untuk konsistensi reproduksi data).
+
+B. Preprocessing (Format T5)
+T5 mengharuskan semua tugas NLP dikonversi menjadi format teks-ke-teks. Oleh karena itu, data diproses dengan format prompting berikut:
+Input: question: [Pertanyaan] context: [Paragraf Bacaan] Target: [Teks Jawaban]
+Parameter tokenisasi yang digunakan:
+•	max_input_length: 512 token (untuk menampung paragraf panjang).
+•	max_target_length: 64 token (untuk jawaban singkat padat).
+•	Label Padding: Mengganti token padding pada label dengan nilai -100 agar tidak diperhitungkan dalam kalkulasi loss.
+
+3. Implementasi & Konfigurasi Training
+Model yang digunakan adalah t5-small. Meskipun ukurannya lebih kecil dibandingkan t5-base, model ini jauh lebih cepat dan ringan, cocok untuk eksperimen dengan sumber daya terbatas namun tetap mampu menghasilkan jawaban yang relevan.
+Hyperparameter Pelatihan:
+______________________________________________________________________________________________
+Parameter	        |  Nilai	    |                      Penjelasan                            |
+______________________________________________________________________________________________
+Learning Rate	    |2e-5	        |Kecepatan belajar standar untuk fine-tuning Transformer.    |
+Batch Size	      |8	          |Disesuaikan dengan kapasitas VRAM agar tidak Out of Memory. |
+Epochs	          |3	          |Jumlah putaran pelatihan pada dataset sampel.               |
+Weight Decay	    |0.01	        |Regularisasi untuk mencegah overfitting.                    |
+______________________________________________________________________________________________
+
+Visualisasi Training Loss: Grafik di bawah ini menunjukkan penurunan loss yang konsisten selama 3 epoch, menandakan model berhasil belajar memetakan konteks pertanyaan ke jawaban yang benar.
+
+4. Analisis Hasil & Inferensi
+Pengujian dilakukan secara manual dengan memberikan konteks bacaan baru yang tidak ada dalam data latih untuk menguji kemampuan generalisasi model.
+Skenario 1: Pengetahuan Umum (Sejarah)
+•	Konteks: Teks tentang Candi Borobudur (lokasi di Magelang, kuil Buddha terbesar, struktur bangunan).
+•	Pertanyaan: "Where is Borobudur located?"
+•	Prediksi Model: Magelang Regency atau Central Java, Indonesia.
+•	Analisis: Model berhasil mengekstrak informasi geografis yang spesifik dari paragraf.
+
+Skenario 2: Teknis (Pemrograman)
+•	Konteks: Definisi bahasa pemrograman Python (high-level, readability, indentation).
+•	Pertanyaan: "What does Python design emphasize?"
+•	Prediksi Model: code readability
+•	Analisis: Model mampu memahami kalimat kompleks "Its design philosophy emphasizes code readability" dan menjawab dengan frasa yang tepat.
+
+5. Kesimpulan
+Eksperimen ini menunjukkan bahwa model T5-Small yang dilatih dengan strategi Generative QA mampu bekerja dengan sangat baik pada dataset SQuAD. Pendekatan text-to-text terbukti fleksibel; model tidak hanya "menunjuk" lokasi jawaban, tetapi "menulis" jawaban tersebut.
+Meskipun hanya menggunakan 4.000 sampel data latih, model sudah mampu menjawab pertanyaan faktual dengan akurasi yang baik. Penggunaan versi small memberikan keuntungan signifikan dari segi kecepatan pelatihan dan inferensi tanpa mengorbankan kualitas jawaban secara drastis untuk kasus-kasus sederhana.
