@@ -1,83 +1,58 @@
-Tentu, ini adalah draf laporan yang disusun berdasarkan **Jupyter Notebook Anda sendiri (`finetuning_bert_text_classification_ag_news.ipynb`)**.
+Laporan Proyek: Klasifikasi Berita AG News Menggunakan DistilBERT
+Repository Name: finetuning-bert-text-classification 
+Model Architecture: DistilBERT Base Uncased 
+Dataset: AG News (Subsampled) 
+Task: Multi-Class Text Classification
+________________________________________
+1. Latar Belakang
+Laporan ini membahas proses fine-tuning model DistilBERT untuk mengotomatisasi klasifikasi artikel berita. DistilBERT dipilih sebagai base model karena arsitekturnya yang lebih ringan (lebih sedikit parameter) dibandingkan BERT standar, namun tetap mampu menghasilkan performa yang kompetitif dengan waktu pelatihan yang lebih efisien.
+Objektif utama adalah melatih model untuk memprediksi satu dari empat kategori berita: World, Sports, Business, atau Sci/Tech berdasarkan judul dan deskripsi berita.
 
-Laporan ini memiliki struktur yang sama dengan contoh teman Anda, tetapi isinya **sudah saya sesuaikan sepenuhnya** dengan kode Anda (menggunakan **DistilBERT**, **Sampling Data 3500**, dan hasil akurasi **91%**).
+2. Alur Pengerjaan
+A. Persiapan Dataset
+Data yang digunakan berasal dari dataset publik ag_news di Hugging Face. Mengingat keterbatasan sumber daya komputasi (GPU T4 di Google Colab) dan efisiensi waktu, dilakukan teknik Random Sampling.
+•	Total Label: 4 Kategori (World, Sports, Business, Sci/Tech).
+•	Strategi Sampling: Mengambil 3.500 sampel acak untuk data latih (train) dengan SEED=999 untuk menjamin reproduktifitas data.
+•	Data Validasi: Menggunakan 20% dari jumlah sampel (700 data) yang diambil dari set pengujian.
 
-Silakan salin konten di bawah ini ke file baru bernama `Laporan_Tugas_1.md` atau `README.md`.
-
----
-
-# Laporan Proyek: Klasifikasi Berita AG News Menggunakan DistilBERT
-
-**Repository Name:** `finetuning-bert-text-classification`
-**Model Architecture:** DistilBERT Base Uncased
-**Dataset:** AG News (Subsampled)
-**Task:** Multi-Class Text Classification
-
----
-
-## 1. Latar Belakang
-
-Laporan ini membahas proses *fine-tuning* model **DistilBERT** untuk mengotomatisasi klasifikasi artikel berita. DistilBERT dipilih sebagai *base model* karena arsitekturnya yang lebih ringan (lebih sedikit parameter) dibandingkan BERT standar, namun tetap mampu menghasilkan performa yang kompetitif dengan waktu pelatihan yang lebih efisien.
-
-Objektif utama adalah melatih model untuk memprediksi satu dari empat kategori berita: **World, Sports, Business, atau Sci/Tech** berdasarkan judul dan deskripsi berita.
-
-## 2. Alur Pengerjaan (Metodologi)
-
-### A. Persiapan Dataset
-
-Data yang digunakan berasal dari dataset publik `ag_news` di Hugging Face. Mengingat keterbatasan sumber daya komputasi (GPU T4 di Google Colab) dan efisiensi waktu, dilakukan teknik **Random Sampling**.
-
-* **Total Label:** 4 Kategori (World, Sports, Business, Sci/Tech).
-* **Strategi Sampling:** Mengambil **3.500 sampel** acak untuk data latih (*train*) dengan `SEED=999` untuk menjamin reproduktifitas data.
-* **Data Validasi:** Menggunakan 20% dari jumlah sampel (700 data) yang diambil dari set pengujian.
-
-### B. Preprocessing Data
-
+B. Preprocessing Data
 Tahap pra-pemrosesan dilakukan untuk menyesuaikan format teks mentah ke format yang dapat diproses oleh model:
+1.	Tokenisasi: Menggunakan AutoTokenizer dari distilbert-base-uncased.
+2.	Truncation: Panjang kalimat dibatasi maksimal 128 token (MAX_LENGTH = 128) untuk menghemat memori GPU.
+3.	Label Formatting: Mengubah nama kolom label menjadi labels agar kompatibel dengan library Trainer Hugging Face.
 
-1. **Tokenisasi:** Menggunakan `AutoTokenizer` dari `distilbert-base-uncased`.
-2. **Truncation:** Panjang kalimat dibatasi maksimal **128 token** (`MAX_LENGTH = 128`) untuk menghemat memori GPU.
-3. **Label Formatting:** Mengubah nama kolom `label` menjadi `labels` agar kompatibel dengan library `Trainer` Hugging Face.
-
-### C. Konfigurasi Eksperimen
-
+C. Konfigurasi Eksperimen
 Pelatihan dilakukan dengan hyperparameter berikut:
+_______________________________________________________________________________________________
+Parameter      |	         Nilai           |	                Penjelasan                      |
+_______________________________________________________________________________________________
+Model          | 	distilbert-base-uncased  |	Versi "distilled" dari BERT yang lebih cepat.   |
+Batch Size     |	16	                     |  Ukuran batch standar untuk GPU T4.              |
+Learning Rate  |	3e-5 (0.00003)           |	Kecepatan belajar model.                        |
+Epochs         |	3                        |	Jumlah putaran pelatihan penuh.                 |
+Logging Steps  |	10                       |	Frekuensi pencatatan metrik loss.               |
+_______________________________________________________________________________________________
 
-| Parameter | Nilai | Penjelasan |
-| --- | --- | --- |
-| **Model** | `distilbert-base-uncased` | Versi "distilled" dari BERT yang lebih cepat. |
-| **Batch Size** | 16 | Ukuran batch standar untuk GPU T4. |
-| **Learning Rate** | 3e-5 (0.00003) | Kecepatan belajar model. |
-| **Epochs** | 3 | Jumlah putaran pelatihan penuh. |
-| **Logging Steps** | 10 | Frekuensi pencatatan metrik loss. |
+3. Hasil Eksperimen
+A. Performa Pelatihan
+Proses pelatihan berlangsung selama 3 epoch dengan total 657 langkah (steps). Berikut adalah rekapitulasi hasil evaluasi pada setiap epoch:
+__________________________________________________________________________
+Epoch	| Training Loss	| Validation Loss |    Accuracy	    |    F1-Score  |
+__________________________________________________________________________
+1     |  	0.2817      |     0.3042    	|     90.00%  	  |     0.899    |
+2	    |   0.2264  	  |     0.2745	    |     91.86%    	|     0.918    |
+3	    |   0.1237    	|     0.2837    	|     91.14%    	|     0.911    |
+__________________________________________________________________________
 
-## 3. Hasil Eksperimen
-
-### A. Performa Pelatihan
-
-Proses pelatihan berlangsung selama 3 epoch dengan total 657 langkah (*steps*). Berikut adalah rekapitulasi hasil evaluasi pada setiap epoch:
-
-| Epoch | Training Loss | Validation Loss | Accuracy | F1-Score |
-| --- | --- | --- | --- | --- |
-| 1 | 0.2817 | 0.3042 | 90.00% | 0.899 |
-| 2 | 0.2264 | 0.2745 | **91.86%** | **0.918** |
-| 3 | 0.1237 | 0.2837 | 91.14% | 0.911 |
-
-Model mencapai performa puncak pada **Epoch ke-2** dengan akurasi validasi sebesar **91.86%**. Pada epoch ke-3, meskipun *Training Loss* turun drastis (0.12), *Validation Loss* sedikit naik, mengindikasikan model mulai mengalami sedikit *overfitting*, namun masih dalam batas wajar.
-
-### B. Visualisasi Loss
-
-Grafik di bawah ini menunjukkan penurunan *Training Loss* yang konsisten, menandakan model berhasil mempelajari pola dari data berita dengan baik.
-
-### C. Metrik Evaluasi
-
+Model mencapai performa puncak pada Epoch ke-2 dengan akurasi validasi sebesar 91.86%. Pada epoch ke-3, meskipun Training Loss turun drastis (0.12), Validation Loss sedikit naik, mengindikasikan model mulai mengalami sedikit overfitting, namun masih dalam batas wajar.
+B. Visualisasi Loss
+Grafik di bawah ini menunjukkan penurunan Training Loss yang konsisten, menandakan model berhasil mempelajari pola dari data berita dengan baik.
+C. Metrik Evaluasi
 Evaluasi dilakukan menggunakan dua metrik:
-
-1. **Akurasi:** Mengukur ketepatan prediksi secara umum. Hasil akhir menunjukkan model mampu menebak kategori berita dengan tepat 9 dari 10 kali.
-2. **F1-Score (Weighted):** Mencapai skor 0.91, menunjukkan keseimbangan yang baik antara *Precision* dan *Recall* di seluruh kategori topik.
-
-## 4. Kesimpulan
-
-Eksperimen ini menunjukkan bahwa model **DistilBERT** sangat efektif untuk tugas klasifikasi teks pada dataset AG News. Meskipun hanya menggunakan **3.500 sampel data** (kurang dari 5% dataset asli), model berhasil mencapai akurasi **>91%**.
-
+1.	Akurasi: Mengukur ketepatan prediksi secara umum. Hasil akhir menunjukkan model mampu menebak kategori berita dengan tepat 9 dari 10 kali.
+2.	F1-Score (Weighted): Mencapai skor 0.91, menunjukkan keseimbangan yang baik antara Precision dan Recall di seluruh kategori topik.
+4. Kesimpulan
+Eksperimen ini menunjukkan bahwa model DistilBERT sangat efektif untuk tugas klasifikasi teks pada dataset AG News. Meskipun hanya menggunakan 3.500 sampel data (kurang dari 5% dataset asli), model berhasil mencapai akurasi >91%.
 Penggunaan DistilBERT terbukti efisien secara komputasi (waktu training ~2 menit) tanpa mengorbankan performa secara signifikan dibandingkan model BERT yang lebih besar.
+
+
