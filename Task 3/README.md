@@ -1,41 +1,41 @@
-# Task 3: Abstractive Text Summarization using Phi-2 & QLoRA
+# Fine-Tuning Phi-2 for Abstractive Summarization 🚀
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![HuggingFace](https://img.shields.io/badge/Transformers-4.36%2B-yellow)
-![PEFT](https://img.shields.io/badge/PEFT-LoRA-green)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)
+![HuggingFace](https://img.shields.io/badge/Transformers-4.30%2B-yellow)
+![PEFT](https://img.shields.io/badge/PEFT-QLoRA-green)
 
-## 📌 Overview
-This project focuses on **Abstractive Text Summarization**, where the model generates a concise summary that captures the core meaning of a source text, rather than just extracting sentences. 
+## 📖 Project Overview
+This repository contains the implementation for **Task 3: Abstractive Text Summarization**. We utilize **Microsoft Phi-2** (a 2.7B parameter Small Language Model) and fine-tune it to generate concise summaries of news articles.
 
-We utilize **Microsoft Phi-2**, a powerful Small Language Model (SLM) with 2.7 Billion parameters. To fine-tune this model on a consumer-grade GPU (Google Colab T4), we implement **QLoRA (Quantized Low-Rank Adaptation)**.
+To train this model on consumer-grade hardware (Google Colab T4 GPU), we employ **QLoRA (Quantized Low-Rank Adaptation)**, allowing us to achieve high-performance results with significantly reduced memory usage.
 
 ## 📂 Dataset
 * **Name:** [XSum (Extreme Summarization)](https://huggingface.co/datasets/EdinburghNLP/xsum)
-* **Content:** BBC News articles and their single-sentence summaries.
-* **Task:** The model reads the news article and generates a one-sentence summary.
+* **Source:** BBC News Articles.
+* **Goal:** Generate a one-sentence summary (abstractive) that captures the essence of the article.
 
-## 🛠️ Methodology
+## 🛠️ Technical Approach
 
 ### 1. Model Architecture
 * **Base Model:** `microsoft/phi-2`
-* **Quantization:** 4-bit Normal Float (NF4) using `bitsandbytes`. This reduces VRAM usage significantly (from ~6GB to ~3GB for model loading).
+* **Quantization:** 4-bit Normal Float (NF4) via `bitsandbytes`.
+* **Training Method:** Supervised Fine-Tuning (SFT) with LoRA adapters.
 
-### 2. Fine-Tuning Strategy (PEFT)
-Instead of retraining all 2.7B parameters, we attach **LoRA Adapters** to specific layers of the model:
-* **Target Modules:** `Wqkv`, `fc1`, `fc2`, `dense`.
+### 2. QLoRA Configuration (Optimized)
+Unlike standard configurations, we target **all linear layers** to ensure stable convergence:
 * **Rank (r):** 32
 * **Alpha:** 64
-* **Trainable Parameters:** Less than 2% of the total model size, enabling fast and efficient training.
+* **Target Modules:** `q_proj`, `k_proj`, `v_proj`, `dense`, `fc1`, `fc2`
 
-### 3. Prompt Engineering
-We format the data into an instruction-following structure to guide the model:
+### 3. Hardware Optimization (T4 Fix)
+Specific patches were applied to ensure stability on NVIDIA T4 GPUs:
+* Forced `float32` precision for LoRA adapters and LayerNorm modules to prevent `grad_scaler` errors common with mixed precision on older GPUs.
 
-```text
-### Instruction:
-Summarize the news article below concisely.
+## 🚀 Installation & Usage
 
-### Input:
-{Full News Article}
+### Prerequisites
+Install the required libraries for quantization and fine-tuning:
 
-### Response:
-{Summary}
+```bash
+pip install -q -U torch transformers datasets peft bitsandbytes trl accelerate
