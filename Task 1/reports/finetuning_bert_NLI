@@ -1,0 +1,66 @@
+Laporan Task 3: Fine-Tuning DistilBERT untuk Inferensi Bahasa Alamiah (MNLI)
+Repository Name: finetuning-distilbert-mnli 
+Model Architecture: DistilBERT Base Uncased 
+Dataset: GLUE Benchmark - MNLI (Subsampled) 
+Task: Natural Language Inference (Sequence Pair Classification)
+________________________________________
+
+1. Latar Belakang
+Tugas ini berfokus pada Natural Language Inference (NLI), sebuah tantangan dalam pemrosesan bahasa alami untuk menentukan hubungan logika antara dua kalimat Premis (kalimat dasar) dan Hipotesis (kesimpulan sementara).
+Tujuan utama eksperimen ini adalah melatih model untuk berpikir logis dan mengklasifikasikan hubungan pasangan kalimat ke dalam tiga kategori:
+1.	Entailment: Hipotesis adalah kebenaran logis dari premis.
+2.	Contradiction: Hipotesis bertentangan secara langsung dengan premis.
+3.	Neutral: Kebenaran hipotesis tidak dapat dipastikan hanya dari premis saja.
+Berbeda dengan klasifikasi teks standar (seperti AG News atau GoEmotions) yang hanya menerima satu input, tugas ini mewajibkan model memproses pasangan kalimat secara simultan.
+
+2. Metodologi Eksperimen
+A. Dataset & Strategi Sampling
+Dataset yang digunakan adalah subset MNLI (Multi-Genre Natural Language Inference) dari benchmark GLUE. Dataset aslinya berukuran sangat besar (~392.000 data), sehingga untuk efisiensi komputasi pada GPU T4, diterapkan strategi Random Sampling:
+•	Training Set: 5.000 sampel data latih.
+•	Validation Set: 1.000 sampel data validasi (matched).
+•	Seed: Menggunakan SEED=42 untuk menjaga konsistensi pengambilan sampel.
+
+B. Arsitektur Model: DistilBERT
+Pada eksperimen ini, digunakan model distilbert-base-uncased. Pemilihan model ini didasarkan pada pertimbangan efisiensi: DistilBERT memiliki ukuran 40% lebih kecil dan kecepatan inferensi 60% lebih tinggi dibandingkan BERT biasa, namun tetap mempertahankan kemampuan pemahaman bahasa yang mendekati performa aslinya.
+
+C. Preprocessing (Dual-Sequence Input)
+Tokenisasi dilakukan dengan teknik khusus untuk menangani sepasang kalimat. Tokenizer secara otomatis menyisipkan token spesial [SEP] sebagai pemisah:
+Format Input: [CLS] Kalimat Premis [SEP] Kalimat Hipotesis [SEP]
+Panjang sekuens dibatasi maksimal (max_length) 128 token dengan strategi dynamic padding untuk menghemat memori.
+
+3. Implementasi & Konfigurasi
+Pelatihan dilakukan menggunakan Hugging Face Trainer dengan parameter sebagai berikut:
+________________________________________________________________________________________________
+Hyperparameter	|    Nilai	        |                    Penjelasan                            |
+________________________________________________________________________________________________
+Learning Rate	  |    2e-5	          |    Angka kecil agar model tidak lupa pengetahuan awalnya |
+Batch Size	    |    16	            |    Ukuran batch optimal untuk stabilitas gradien.        |
+Epochs	        |    3	            |    Jumlah iterasi pelatihan penuh.                       | 
+Optimizer	      |    AdamW	        |    Optimizer standar dengan weight decay 0.01.           |
+________________________________________________________________________________________________
+
+Visualisasi Training: Grafik Loss di bawah ini menunjukkan proses konvergensi model. Terlihat garis loss menurun secara konsisten, menandakan model berhasil mempelajari pola logika dari pasangan kalimat meskipun hanya menggunakan data sampling.
+
+4. Analisis Hasil & Inferensi
+Evaluasi kualitatif dilakukan dengan memberikan kasus uji logika deduktif kepada model. Berikut adalah analisis dari hasil prediksi model:
+Kasus 1: Entailment (Implikasi)
+•	Premis: "A soccer player is running across the field." (Pemain bola berlari di lapangan)
+•	Hipotesis: "A person is moving." (Seseorang sedang bergerak)
+•	Prediksi Model: Entailment (Confidence Tinggi)
+•	Analisis: Model memahami bahwa "berlari" adalah bentuk spesifik dari "bergerak". Jika seseorang berlari, secara logika dia pasti bergerak.
+
+Kasus 2: Contradiction (Kontradiksi)
+•	Premis: "A man is inspecting the uniform..." (Pria sedang memeriksa seragam)
+•	Hipotesis: "The man is sleeping on the couch." (Pria itu sedang tidur di sofa)
+•	Prediksi Model: Contradiction
+•	Analisis: Model mendeteksi ketidakmungkinan logis; seseorang tidak mungkin "memeriksa seragam" dan "tidur" pada saat yang bersamaan.
+
+Kasus 3: Neutral (Netral)
+•	Premis: "The product was launched in 2010."
+•	Hipotesis: "The product is very expensive."
+•	Prediksi Model: Neutral
+•	Analisis: Model menyimpulkan bahwa tahun peluncuran tidak memiliki hubungan sebab-akibat langsung dengan harga produk. Bisa jadi mahal, bisa jadi murah, informasinya tidak cukup (Netral).
+
+5. Kesimpulan
+Eksperimen ini membuktikan bahwa model DistilBERT yang lebih ringan mampu menyelesaikan tugas penalaran logika (NLI) dengan baik. Meskipun dilatih hanya dengan 5.000 sampel (sekitar 1.2% dari total dataset), model berhasil menangkap nuansa logika dasar seperti hubungan sebab-akibat, negasi, dan independensi informasi antar kalimat.
+
