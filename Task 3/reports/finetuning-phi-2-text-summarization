@@ -1,1 +1,53 @@
+Laporan Task 3: Fine-Tuning Phi-2 untuk Abstractive Text Summarization
+Nama: Muhammad Sabian Aziz 
+NIM: 1103223236 
+Repository: finetuning-phi2-summarization 
+Task: Abstractive Text Summarization
+________________________________________
+1. Pendahuluan
+Tugas ini bertujuan untuk membangun model Abstractive Text Summarization yang mampu menghasilkan ringkasan singkat dan padat (satu kalimat) dari artikel berita. Berbeda dengan extractive summarization yang hanya menyalin kalimat penting, metode abstractive mengharuskan model untuk memahami konteks dan menulis ulang inti sari berita dengan kalimatnya sendiri.
+Kami menggunakan Microsoft Phi-2, sebuah Small Language Model (SLM) dengan 2.7 Miliar parameter. Untuk mengatasi keterbatasan memori pada GPU Google Colab (T4 16GB), kami menerapkan teknik QLoRA (Quantized Low-Rank Adaptation) yang memungkinkan pelatihan model besar dengan presisi 4-bit secara efisien.
 
+2. Metodologi
+A. Dataset & Preprocessing
+•	Dataset: EdinburghNLP/xsum (BBC News Articles).
+•	Sampling: Menggunakan subset 1.000 data latih untuk efisiensi demonstrasi fine-tuning.
+•	Format Prompt (Instruction Tuning): Agar model memahami tugasnya sebagai peringkas berita, data diformat ulang menjadi struktur instruksi berikut:
+_________________________________________________________________________
+### Instruction:                                                        |
+Summarize the following news article in a concise and abstractive way.  |
+                                                                        |
+### Article:                                                            |
+{Isi Berita Lengkap}                                                    |
+                                                                        |
+### Summary:                                                            |
+{Ringkasan Gold Standard}<|endoftext|>                                  |
+_________________________________________________________________________
+
+B. Arsitektur Model & Konfigurasi Training
+saya menggunakan perpustakaan peft dan bitsandbytes untuk implementasi QLoRA. | Parameter | Konfigurasi | Keterangan | | :--- | :--- | :--- | | Base Model | microsoft/phi-2 | 2.7B Parameters | | Quantization | 4-bit (NF4) | Hemat VRAM GPU | | LoRA Rank (r) | 32 | Kapasitas adapter yang cukup besar untuk menangkap detail | | Target Modules | q_proj, k_proj, v_proj, dense, fc1, fc2 | Critical Fix: Menargetkan seluruh modul linear agar loss turun signifikan | | Learning Rate | 2e-4 | Standar untuk QLoRA | | Optimizer | paged_adamw_32bit | Optimasi memori saat training |
+Catatan Teknis: Kami menerapkan patch manual untuk mengubah tipe data parameter LoRA dan LayerNorm menjadi float32 demi menghindari instabilitas numerik pada GPU T4.
+3. Hasil Eksperimen
+A. Performa Training
+Proses pelatihan dilakukan selama 1 epoch (250 steps dengan akumulasi gradien). Berdasarkan log pelatihan:
+•	Initial Loss: ~2.41 (Model belum teradaptasi dengan format instruksi).
+•	Final Loss: 1.89 (Penurunan signifikan menunjukkan model berhasil mempelajari pola ringkasan).
+
+B. Uji Coba (Inference)
+Pengujian dilakukan menggunakan parameter generasi temperature=0.5 dan repetition_penalty=1.2 untuk hasil yang lebih deterministik dan tidak berulang.
+Sampel Berita (Topik: Konflik Perbatasan Ethiopia-Eritrea):
+"Ethiopia has not commented on the reported fighting in the Tsorona area... Residents on the Ethiopian side of the border reported hearing gunfire and seeing a large movement of troops..."
+Hasil Generasi Model:
+"An apparent clash between soldiers from neighbouring Ethiopia and Eritrea has left one person dead near their shared border."
+
+4. Analisis & Kesimpulan
+Analisis Kualitas
+1.	Kemampuan Abstraktif: Model berhasil mengubah frasa spesifik seperti "hearing gunfire" dan "movement of troops" menjadi satu kata generalisasi yang tepat yaitu "clash". Ini membuktikan model melakukan abstractive summarization, bukan sekadar copy-paste.
+2.	Struktur Kalimat: Hasil ringkasan memiliki tata bahasa Inggris yang valid dan koheren.
+3.	Isu Halusinasi: Model menambahkan detail "left one person dead" yang tidak secara eksplisit disebutkan dalam potongan teks input (input hanya menyebutkan fighting dan gunfire). Ini adalah fenomena umum pada LLM (hallucination) yang mencoba melengkapi cerita berdasarkan pengetahuan pre-trainingnya tentang topik konflik militer.
+
+Kesimpulan
+Eksperimen ini berhasil membuktikan bahwa:
+1.	Phi-2 dengan QLoRA sangat efektif untuk dijalankan pada perangkat keras terbatas (Colab T4).
+2.	Konfigurasi target modul LoRA yang lengkap (mencakup MLP layer fc1, fc2) sangat krusial untuk menurunkan loss di bawah 2.0.
+3.	Model mampu menghasilkan ringkasan yang relevan secara topik, meskipun masih memerlukan tuning lebih lanjut untuk meminimalisir halusinasi fakta detail.
