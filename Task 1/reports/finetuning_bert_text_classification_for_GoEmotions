@@ -1,0 +1,56 @@
+Laporan Task 2: Fine-Tuning DistilBERT untuk Klasifikasi Emosi (GoEmotions)
+Repository Name: finetuning-bert-text-classification-goemotions 
+Model Architecture: DistilBERT Base Uncased 
+Dataset: GoEmotions (Simplified)
+Task: Multi-Class Emotion Classification (28 Labels)
+________________________________________
+1. Pendahuluan
+Laporan ini mendokumentasikan implementasi fine-tuning pada model DistilBERT untuk menyelesaikan tugas klasifikasi emosi yang kompleks. Dataset yang digunakan adalah GoEmotions, sebuah dataset berskala besar yang terdiri dari komentar-komentar Reddit yang diberi label dengan 27 kategori emosi detail ditambah 1 kategori neutral.
+Tantangan utama dalam tugas ini adalah banyaknya jumlah kelas (28 label) dibandingkan tugas klasifikasi berita standar. Model dilatih untuk memahami nuansa emosional dalam teks pendek dan memprediksi kategori emosi yang paling dominan.
+
+2. Metodologi Pengerjaan
+A. Strategi Dataset & Sampling
+Dataset asli GoEmotions memiliki sifat Multi-Label. Untuk menyederhanakan proses pelatihan menggunakan Hugging Face Trainer standar, dilakukan strategi berikut:
+1.	Simplifikasi Label: Mengubah format Multi-Label menjadi Single-Label dengan hanya mengambil label emosi pertama/utama dari setiap sampel data.
+2.	Sampling Data: Karena keterbatasan waktu komputasi, diambil sampel acak sebanyak 4.000 data latih dan 800 data uji.
+3.	Random Seed: Menggunakan SEED=2025 untuk memastikan pengambilan sampel data yang konsisten.
+
+B. Preprocessing
+•	Model Checkpoint: Menggunakan distilbert-base-uncased yang lebih ringan dan cepat namun mempertahankan 97% performanya.
+•	Tokenisasi: Teks dikonversi menjadi token ID dengan panjang maksimal 128 token.
+•	Pembersihan Kolom: Menghapus kolom metadata yang tidak diperluka agar kompatibel dengan format input model.
+
+C. Konfigurasi Hyperparameter
+Pelatihan dijalankan dengan konfigurasi berikut:
+_______________________________________________________________________________________________
+Parameter	    |    Nilai	    |                       Alasan                                |
+_______________________________________________________________________________________________
+Batch Size	    |    16	        |    Optimal untuk memori GPU T4 Google Colab.                |
+Learning Rate	|    3.00E-05	|    Standar untuk fine-tuning model berbasis Transformer.    |
+Epochs	        |    3	        |    Cukup untuk data sampling agar tidak overfitting.        |
+Optimizer	    |    AdamW	    |    Optimizer standar dengan weight decay.                   |
+_______________________________________________________________________________________________
+
+3. Hasil Eksperimen
+A. Performa Model
+Selama 3 epoch pelatihan, model dievaluasi pada setiap akhir epoch. Grafik Loss menunjukkan tren penurunan yang stabil baik pada data training maupun validation. Hal ini mengindikasikan bahwa model berhasil mempelajari pola bahasa emosi tanpa mengalami overfitting yang signifikan, meskipun jumlah kelas sangat banyak (28 kelas).
+ 
+B. Metrik Evaluasi
+Evaluasi dilakukan menggunakan metrik:
+1.	Akurasi: Mengukur persentase prediksi yang tepat.
+2.	F1-Score (Weighted): Metrik ini sangat krusial untuk dataset GoEmotions karena distribusi antar kelas emosi tidak seimbang (misal: data joy jauh lebih banyak daripada grief). Weighted F1 memberikan gambaran performa yang lebih adil dengan memperhitungkan proporsi jumlah data tiap kelas.
+Dari hasil Classification Report, model menunjukkan performa baik pada emosi-emosi dengan jumlah data besar (majority class) seperti admiration, gratitude, dan neutral.
+
+4. Analisis Inference
+Pengujian dilakukan dengan memasukkan kalimat baru untuk melihat respons model terhadap sentimen yang berbeda.
+Contoh 1 (Positif):
+Input: "I am so happy and grateful for this amazing gift!" Prediksi: joy atau gratitude Analisis: Model berhasil menangkap kata kunci "happy" dan "grateful".
+Contoh 2 (Negatif):
+Input: "This is absolutely terrible, I hate it so much." 
+Prediksi: anger
+Analisis: Model mengenali sentimen negatif kuat dari kata "terrible" dan "hate".
+Visualisasi confidence score (grafik batang) menunjukkan tingkat keyakinan model. Pada kalimat yang ambigu, probabilitas seringkali terbagi ke beberapa emosi yang mirip.
+
+5. Kesimpulan
+Proses fine-tuning DistilBERT pada dataset GoEmotions berhasil dilakukan. Strategi penyederhanaan masalah dari multi-label menjadi single-label terbukti efektif untuk membangun model klasifikasi emosi dasar dengan sumber daya terbatas.
+Meskipun hanya menggunakan sampel 4.000 data, model mampu membedakan 28 nuansa emosi dengan cukup baik, terutama pada kategori emosi yang memiliki ciri linguistik yang khas. Peningkatan performa di masa depan dapat dilakukan dengan menggunakan loss function khusus multi-label (BCEWithLogitsLoss) dan menambah jumlah data latih.
