@@ -37,7 +37,7 @@ ________________________________________________________________________________
 A. Performa Pelatihan
 Proses pelatihan berlangsung selama 3 epoch dengan total 657 langkah (steps). Berikut adalah rekapitulasi hasil evaluasi pada setiap epoch:
 ________________________________________________________________________________
-Epoch	| Training Loss	| Validation Loss |    Accuracy	    |    F1-Score        |
+Epoch	| Training Loss	| Validation Loss |    Accuracy	    |    F1-Score      |
 ________________________________________________________________________________
 1       |  	0.2817      |     0.3042    	|     90.00%  	    |     0.899    |
 2	    |   0.2264  	|     0.2745	    |     91.86%    	|     0.918    |
