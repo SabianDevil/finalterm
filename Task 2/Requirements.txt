@@ -7,3 +7,4 @@ scikit-learn
 matplotlib
 sentencepiece
 protobuf
+Token Hugging Face
