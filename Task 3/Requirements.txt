@@ -1,18 +1,14 @@
-# Core Libraries
 torch>=2.1.0
 transformers==4.38.2
 datasets==2.17.0
-
-# QLoRA & Optimization (Wajib untuk Phi-2 4-bit)
 bitsandbytes==0.42.0
 peft==0.8.2
 accelerate==0.27.2
 trl==0.8.6
-
-# Utilities
-einops              # Wajib untuk arsitektur Phi-2
+einops
 scipy
 sentencepiece
 protobuf
 evaluate
-rouge_score         # Untuk evaluasi ringkasan
+rouge_score
+Token Hugging Face
